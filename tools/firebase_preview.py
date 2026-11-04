@@ -20,7 +20,9 @@ hashes = {path: hashlib.sha256(blob).hexdigest() for path, blob in files.items()
 try: call("POST", f"{API}/sites/{SITE}/channels?channelId={CHANNEL}", {"ttl": TTL})
 except urllib.error.HTTPError as e:
     if e.code != 409: raise
-ver = call("POST", f"{API}/sites/{SITE}/versions", {"config": {"headers": [{"glob": "**", "headers": {"X-Robots-Tag": "noindex", "Cache-Control": "max-age=300"}}]}})["name"]
+hdrs = {"Cache-Control": "max-age=300"}
+if CHANNEL != "live": hdrs["X-Robots-Tag"] = "noindex"       # previews stay out of search engines; the live site is meant to be found
+ver = call("POST", f"{API}/sites/{SITE}/versions", {"config": {"headers": [{"glob": "**", "headers": hdrs}]}})["name"]
 pop = call("POST", f"{API}/{ver}:populateFiles", {"files": hashes})
 for h in pop.get("uploadRequiredHashes", []):
     path = next(p for p, hh in hashes.items() if hh == h)
