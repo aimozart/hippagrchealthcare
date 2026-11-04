@@ -64,5 +64,9 @@ service-account*.json
 .npmrc
 .netrc
 node_modules/
-.claude/
+.claude/settings.local.json*
 .claude/hook-audit.jsonl
+.venv/
+__pycache__/
+.pytest_cache/
+uv.lock.bak
