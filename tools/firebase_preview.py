@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Release the static site to a Firebase Hosting PREVIEW channel (temporary URL). The live channel is never touched.
+"""Release the static site to a Firebase Hosting channel. Default: the staging PREVIEW channel. The live channel needs --live AND GO_LIVE=yes.
 Auth: the signed-in gcloud account (gcloud auth print-access-token). Stdlib only.
 Usage: python3 tools/firebase_preview.py [--site hippagrchealthcare] [--channel staging] [--project entropa-testnet] [--ttl 604800s]"""
-import gzip, hashlib, json, pathlib, subprocess, sys, urllib.request
+import gzip, hashlib, json, os, pathlib, subprocess, sys, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
 SITE, CHANNEL, PROJECT, TTL = arg("--site", "hippagrchealthcare"), arg("--channel", "staging"), arg("--project", "entropa-testnet"), arg("--ttl", "604800s")
-if CHANNEL == "live": sys.exit("refusing: this tool never touches the live channel")
-TOKEN = subprocess.run(["gcloud", "auth", "print-access-token"], capture_output=True, text=True).stdout.strip()
+if CHANNEL == "live" and not ("--live" in sys.argv and os.environ.get("GO_LIVE") == "yes"):
+    sys.exit("refusing the live channel: needs --live and GO_LIVE=yes (the owner's explicit go-live switch)")
+TOKEN = os.environ.get("GCP_ACCESS_TOKEN") or subprocess.run(["gcloud", "auth", "print-access-token"], capture_output=True, text=True).stdout.strip()
 def call(method, url, body=None, raw=False, ctype="application/json"):
     data = body if raw else (json.dumps(body).encode() if body is not None else None)
     req = urllib.request.Request(url, data=data, method=method, headers={"Authorization": "Bearer " + TOKEN, "x-goog-user-project": PROJECT, "Content-Type": ctype})
