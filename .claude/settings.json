@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)", "Read(./.env.*)", "Read(**/*.pem)", "Read(**/*.key)", "Read(./answer-key/**)", "Read(**/_answer_key_PRIVATE*/**)",
+      "Bash(rm -rf:*)", "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard:*)", "Bash(git clean:*)",
+      "Bash(curl * | sh)", "Bash(curl * | bash)", "Bash(sudo:*)", "Bash(gcloud * delete:*)", "Bash(aws * delete*:*)"
+    ],
+    "ask": ["Bash(git push:*)", "Bash(gh repo:*)", "Bash(gcloud run deploy:*)", "Bash(firebase deploy:*)"]
+  }
+}
