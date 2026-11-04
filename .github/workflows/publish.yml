@@ -1,0 +1,38 @@
+name: publish-site
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "site-data/**", "notes/**", "docs/**", "README.md", "tools/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: publish-site
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: ${{ vars.GCP_WIF_PROVIDER != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Export site data (refuses on secrets, identifiers, canary, small cells)
+        run: python3 tools/export_site_data.py
+      - uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        id: auth
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_PUBLISHER_SA }}
+          token_format: access_token
+      - name: Release to the staging channel
+        env:
+          GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: python3 tools/firebase_preview.py --channel staging
+      - name: Release to the live channel (only when the owner set GO_LIVE=yes)
+        if: ${{ vars.GO_LIVE == 'yes' }}
+        env:
+          GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          GO_LIVE: "yes"
+        run: python3 tools/firebase_preview.py --channel live --live
