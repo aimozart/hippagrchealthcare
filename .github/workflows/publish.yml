@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
       - name: Export site data (refuses on secrets, identifiers, canary, small cells)
         run: python3 tools/export_site_data.py
-      - uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         id: auth
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
