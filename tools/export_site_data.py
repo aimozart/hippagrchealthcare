@@ -54,4 +54,4 @@ data = {"updated": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "commits": comm
         "metrics": metrics, "runs": runs, "synthetic_only": True}
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text("window.SITE_DATA = " + json.dumps(data) + ";\n")
-print("wrote %s: %d commit days, %d notes, %d docs, %d metrics, %d runs" % (OUT.relative_to(ROOT), len(commits), len(notes), len(docs), len(metrics), len(runs)))
+print("wrote %s: %d commit days, %d notes, %d docs, %d metrics, %d runs" % (OUT, len(commits), len(notes), len(docs), len(metrics), len(runs)))
