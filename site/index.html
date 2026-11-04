@@ -1,26 +1,60 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>hippagrchealthcare: a Spark pipeline, built in the open</title>
+<title>HIPPA GRC Healthcare | Data pipeline built in the open</title>
+<meta name="description" content="A nightly healthcare data pipeline on synthetic data, with quality checks, privacy controls and a public build log.">
 <style>
-:root{--bg:#0f1419;--fg:#e6edf3;--mut:#8b98a5;--card:#18202a;--acc:#4cc2ff;--ok:#3fb950;--warn:#d29922}
-@media (prefers-color-scheme: light){:root{--bg:#fff;--fg:#1f2328;--mut:#59636e;--card:#f3f5f7;--acc:#0969da;--ok:#1a7f37;--warn:#9a6700}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
-main{max-width:980px;margin:0 auto;padding:24px 16px}h1{margin:0 0 4px}h2{margin-top:32px;border-bottom:1px solid var(--card);padding-bottom:6px}
-.sub{color:var(--mut)}.strip{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}.tile{background:var(--card);border-radius:10px;padding:12px 16px;min-width:150px}
-.tile b{display:block;font-size:26px;color:var(--acc)}.card{background:var(--card);border-radius:10px;padding:12px 16px;margin:10px 0}
-svg{width:100%;height:auto}input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--mut);background:var(--bg);color:var(--fg);font-size:16px}
-.hit{margin:10px 0}.hit a{color:var(--acc)}.badge{display:inline-block;background:var(--card);border-radius:6px;padding:2px 8px;color:var(--mut);font-size:13px}
-</style></head><body><main>
-<h1>hippagrchealthcare</h1>
-<div class="sub">A nightly Scala 2.13 / Spark 4 pipeline on dirty <b>synthetic</b> healthcare data, built in the open. Updated <span id="upd">…</span>. <span class="badge">synthetic data only</span> <span class="badge">aligned with HIPAA safeguards, not certified</span></div>
-<div class="strip" id="strip"></div>
-<h2>Work per day (commits)</h2><div class="card"><svg id="commits" viewBox="0 0 900 220"></svg></div>
-<h2>Tests over time</h2><div class="card"><svg id="tests" viewBox="0 0 900 220"></svg><div class="sub" id="testsnote"></div></div>
-<h2>Pipeline runs</h2><div class="card" id="runs"></div>
-<h2>Daily notes</h2><div id="notes"></div>
-<h2>Ask the build log</h2>
-<div class="card"><input id="q" placeholder="Search decisions, notes, and docs (client-side search; an AI assistant comes later)"><div id="hits"></div></div>
-<p class="sub">Source: <a href="https://github.com/aimozart/hippagrchealthcare" style="color:var(--acc)">github.com/aimozart/hippagrchealthcare</a>. Everything here is generated from the repository by <code>tools/export_site_data.py</code>, which refuses to publish anything that looks like a secret, an identifier, or the canary token.</p>
+:root{--bg:#f6f9fc;--surface:#fff;--ink:#16324a;--mut:#5b7186;--line:#dbe5ee;--brand:#0b6fa4;--brand-d:#085a85;--teal:#0f9d8a;--soft:#e8f3f9;--warn:#b45309;--r:14px;--sh:0 1px 2px rgba(16,42,67,.06),0 4px 14px rgba(16,42,67,.06)}
+@media (prefers-color-scheme: dark){:root{--bg:#0e1b27;--surface:#152635;--ink:#e8f0f6;--mut:#9db2c4;--line:#27415a;--brand:#5bb6e6;--brand-d:#8fd0f2;--teal:#3dd0bb;--soft:#183349;--sh:none}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--brand)}a:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bar{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);text-decoration:none}.logo svg{width:30px;height:30px}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}nav a{padding:8px 12px;border-radius:999px;text-decoration:none;color:var(--ink);font-size:15px}nav a:hover{background:var(--soft)}
+.hero{background:linear-gradient(180deg,var(--soft),var(--bg));padding:56px 20px 36px}.wrap{max-width:1080px;margin:0 auto}
+.hero h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:0 0 14px;max-width:760px}.hero p{font-size:19px;color:var(--mut);max-width:720px;margin:0 0 20px}
+.pill{display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px;color:var(--mut);margin:0 8px 8px 0}
+.btn{display:inline-block;background:var(--brand);color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:600}.btn:hover{background:var(--brand-d)}.btn.alt{background:transparent;color:var(--brand);border:2px solid var(--brand);margin-left:8px}
+section{padding:36px 20px}section h2{font-size:28px;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.tile b{display:block;font-size:34px;color:var(--brand);line-height:1.1}.tile span{color:var(--mut);font-size:15px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);margin:12px 0}
+svg.chart{width:100%;height:auto;display:block}.axis{fill:var(--mut);font-size:12px}
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.layer{border-left:6px solid var(--teal);background:var(--surface);border-radius:10px;padding:14px 16px;box-shadow:var(--sh)}.layer h3{margin:0 0 4px;font-size:18px}
+input[type=search]{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:17px}
+.hit{padding:12px 0;border-bottom:1px solid var(--line)}.badge{display:inline-block;background:var(--soft);color:var(--brand-d);border-radius:6px;padding:1px 8px;font-size:13px}.sub{color:var(--mut)}
+footer{background:var(--surface);border-top:1px solid var(--line);padding:28px 20px;color:var(--mut);font-size:15px}
+@media (max-width:640px){nav{margin-left:0}section{padding:28px 16px}}
+</style></head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="bar">
+ <a class="logo" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0b6fa4"/><path d="M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z" fill="#fff"/></svg>HIPPA GRC Healthcare</a>
+ <nav aria-label="Main"><a href="#overview">Overview</a><a href="#pipeline">Pipeline</a><a href="#metrics">Progress</a><a href="#runs">Runs</a><a href="#notes">Build log</a><a href="#ask">Ask</a></nav>
+</div></header>
+<main id="main">
+<div class="hero" id="top"><div class="wrap">
+ <span class="pill">Synthetic data only</span><span class="pill">Aligned with HIPAA safeguards, not certified</span><span class="pill">Built in the open</span>
+ <h1>Healthcare data, handled with care.</h1>
+ <p>A nightly data pipeline that takes messy, realistic healthcare records, cleans and checks them, protects privacy, and turns them into trustworthy reports. Every step, test and decision is public. Nothing here is real patient data.</p>
+ <a class="btn" href="#metrics">See today's progress</a><a class="btn alt" href="https://github.com/aimozart/hippagrchealthcare">View the code</a>
+</div></div>
+<section id="overview"><div class="wrap"><h2>At a glance</h2><p class="lead">Updated <span id="upd">...</span></p><div class="grid" id="strip"></div></div></section>
+<section id="pipeline"><div class="wrap"><h2>How the data flows</h2><p class="lead">Four layers, each with a clear job and a way to prove it.</p>
+ <div class="layers">
+  <div class="layer"><h3>Bronze</h3>Raw files exactly as they arrive, kept unchanged.</div>
+  <div class="layer"><h3>Silver</h3>Checked and cleaned. Bad records are set aside with the reason, never silently dropped. Identifiers masked.</div>
+  <div class="layer"><h3>Gold</h3>Trusted business measures: denial rates, length of stay, lab flags.</div>
+  <div class="layer"><h3>Platinum</h3>Privacy-protected tables, dashboards and questions answered in plain English.</div>
+ </div></div></section>
+<section id="metrics"><div class="wrap"><h2>Progress</h2><p class="lead">Work and quality, drawn from the project's own records.</p>
+ <div class="card"><h3 style="margin-top:0">Work per day (commits)</h3><svg class="chart" id="commits" viewBox="0 0 900 220" role="img" aria-label="Commits per day"></svg></div>
+ <div class="card"><h3 style="margin-top:0">Tests passing over time</h3><svg class="chart" id="tests" viewBox="0 0 900 220" role="img" aria-label="Passing tests over time"></svg><div class="sub" id="testsnote"></div></div>
+</div></section>
+<section id="runs"><div class="wrap"><h2>Pipeline runs</h2><p class="lead">Each night's run: records in, checked, and set aside. Records are chained so changes can be detected.</p><div class="card" id="runbox"></div></div></section>
+<section id="notes"><div class="wrap"><h2>Build log</h2><p class="lead">Daily notes on what was done, why, and what went wrong.</p><div id="notelist"></div></div></section>
+<section id="ask"><div class="wrap"><h2>Ask the build log</h2><p class="lead">Search decisions, notes and documents. An AI assistant that answers in plain English comes next.</p>
+ <input type="search" id="q" placeholder="Try: quarantine, masking, idempotent" aria-label="Search the build log"><div id="hits" aria-live="polite"></div></div></section>
 </main>
-<script src="data.js"></script>
-<script src="app.js"></script></body></html>
+<footer><div class="wrap">This is a demonstration project built on synthetic data. It is not medical advice and contains no real patient information. Controls are aligned with and mapped to HIPAA safeguards; no certification or compliance is claimed. Source code and history: <a href="https://github.com/aimozart/hippagrchealthcare">github.com/aimozart/hippagrchealthcare</a>.</div></footer>
+<script src="data.js"></script><script src="app.js"></script></body></html>
