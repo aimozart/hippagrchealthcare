@@ -1,0 +1,27 @@
+# hippagrchealthcare
+
+A nightly batch pipeline on **Scala 2.13 and Apache Spark 4**, built in the open: dirty **synthetic** healthcare data (patients, encounters, labs, claim lines) goes in; four governed layers come out (bronze, silver, gold, platinum), with validation and quarantine, masking, row-level access policies, a run record, tests and CI.
+
+**Status: in progress.** The build starts in November 2026 and runs to mid-December. This repository is the working record: code, tests, decisions, daily notes and evidence, including mistakes and corrections.
+
+## Ground rules
+- **Synthetic data only.** No real patient or client data, ever. Identifier-shaped values are generated from ranges that real people cannot have (for example SSN-shaped values with area 900-999 and group 00), and every record carries a canary token that must never appear in outputs or logs.
+- **Treated like real PHI.** The mock data is handled under the same controls as real protected data: nothing sensitive in git, secrets only from the environment, access through policy functions, audit records, and tests that prove the controls work.
+- **Wording.** The controls are *aligned with and mapped to* HIPAA safeguards. Nothing here is claimed to be compliant or certified.
+- **Style.** Pure `DataFrame => DataFrame` transformations, errors as values (`Validated`/`Either`), statistics as monoids, effects only at the edge, tests first.
+- **AI use, stated plainly.** Through Dec 7 the code is typed by hand. From Dec 8 AI assistance is used (tests written first by hand, AI drafts, human review, an AI log in `notes/ai-log.md`). The claim is "directed AI assistance, reviewed and verified with tests".
+
+## Layout (grows as the build proceeds)
+- `src/` Scala code and tests (sbt project, Scala 2.13.17, Spark 4.1.1, Java 17)
+- `docs/process/` the workflow: plan, decisions, sprint reviews
+- `notes/` daily notes and the AI log
+- `scripts/git-hooks/` pre-commit safety hook (secret scan, SSN-shape check, no large data files)
+
+## Safety hook
+```
+./scripts/git-hooks/install.sh .
+```
+installs a pre-commit hook that blocks secrets, SSN-shaped values outside the synthetic range, key files, and files over 5 MB.
+
+## Licence
+MIT (see `LICENSE`).

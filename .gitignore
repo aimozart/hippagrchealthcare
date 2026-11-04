@@ -1,0 +1,68 @@
+# Secrets and credentials (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+.aws/
+credentials*
+# Data and outputs (synthetic or not, data never goes in git)
+data/
+landing/
+big/
+output/
+warehouse/
+spark-warehouse/
+metastore_db/
+derby.log
+checkpoint*/
+*.parquet
+*.orc
+*.avro
+*.csv.gz
+answer-key/
+_answer_key_PRIVATE*/
+# Build and tool noise
+target/
+project/target/
+project/project/
+.bsp/
+.bloop/
+.metals/
+.scala-build/
+cs
+.idea/
+.vscode/
+.kiro/settings/
+# Logs
+*.log
+logs/
+# Scala / sbt extras
+*.class
+.history
+.lib/
+dist/*
+lib_managed/
+src_managed/
+project/boot/
+.DS_Store
+# More secret and infrastructure files
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pfx
+*.gpg
+*.asc
+service-account*.json
+*-sa-key*.json
+*.tfstate
+*.tfstate.*
+.terraform/
+.npmrc
+.netrc
+node_modules/
+.claude/
+.claude/hook-audit.jsonl
