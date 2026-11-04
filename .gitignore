@@ -66,3 +66,7 @@ service-account*.json
 node_modules/
 .claude/
 .claude/hook-audit.jsonl
+.venv/
+__pycache__/
+.pytest_cache/
+uv.lock.bak
