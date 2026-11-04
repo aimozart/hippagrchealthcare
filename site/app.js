@@ -18,6 +18,19 @@ bars('tests',D.metrics.map(m=>m.date),D.metrics.map(m=>m.passed),'var(--teal)');
 $('testsnote').textContent = D.metrics.length ? '' : 'Test counts appear once check.sh records them in notes/metrics.jsonl.';
 $('runbox').innerHTML = D.runs.length ? D.runs.slice(-8).reverse().map(r=>'<div>'+(r.night||'?')+': in '+r.rowsIn+', valid '+r.valid+', quarantined '+r.quarantined+(r.hash?' <span class="badge">'+String(r.hash).slice(0,12)+'</span>':'')+'</div>').join('') : '<span class="sub">The first pipeline run appears here after Sprint 1 (Day 5).</span>';
 $('notelist').innerHTML = D.notes.length ? D.notes.slice().reverse().map(n=>'<div class="card"><b>'+n.title+'</b> <span class="badge">'+n.words+' words</span><div class="sub">'+n.excerpt+'</div></div>').join('') : '<div class="card sub">Daily notes will appear here from Day 1 (Thursday, Nov 5, 2026).</div>';
+
+function hbars(id, items, fmt){ // items: [{label, value}]
+  if(!items.length) return;
+  const mx=Math.max(1,...items.map(i=>i.value));
+  $(id).innerHTML=items.map(i=>'<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><div style="width:220px;font-size:14px">'+i.label+'</div><div style="flex:1;background:var(--soft);border-radius:6px"><div style="width:'+Math.round(100*i.value/mx)+'%;background:var(--brand);height:18px;border-radius:6px"></div></div><div style="width:90px;text-align:right;font-size:14px">'+fmt(i.value)+'</div></div>').join('');}
+const DS = D.datasets || {};
+if(DS.quarantine_by_reason){const m={};DS.quarantine_by_reason.forEach(r=>{const k=r.entity+': '+r.reason;m[k]=(m[k]||0)+(r.count||0);});
+  hbars('qbox',Object.keys(m).map(k=>({label:k,value:m[k]})).sort((a,b)=>b.value-a.value).slice(0,14),v=>v.toLocaleString());}
+if(DS.denial_by_payer){const m={};DS.denial_by_payer.forEach(r=>{const a=m[r.payer]||(m[r.payer]={l:0,d:0});a.l+=r.lines||0;a.d+=r.denied||0;});
+  hbars('denbox',Object.keys(m).map(k=>({label:'Denial rate, '+k,value:m[k].l?m[k].d/m[k].l:0})),v=>(100*v).toFixed(1)+'%');}
+if(DS.encounters_per_day){const m={};DS.encounters_per_day.forEach(r=>{m[r.type]=(m[r.type]||0)+(r.count||0);});
+  hbars('encbox',Object.keys(m).map(k=>({label:'Encounters, '+k,value:m[k]})),v=>v.toLocaleString());}
+if(DS.lab_flags){hbars('labbox',DS.lab_flags.map(r=>({label:'Abnormal lab rate, '+r.test,value:r.total?(r.abnormal||0)/r.total:0})),v=>(100*v).toFixed(1)+'%');}
 $('q').addEventListener('input',e=>{const q=e.target.value.toLowerCase().split(/\s+/).filter(Boolean);
   if(!q.length){$('hits').innerHTML='';return;}
   const sc=D.docs.map(d=>{const t=(d.title+' '+d.text).toLowerCase();let s=0;q.forEach(w=>{const m=t.split(w).length-1;s+=m;if(d.title.toLowerCase().includes(w))s+=5;});return {d,s};}).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,6);

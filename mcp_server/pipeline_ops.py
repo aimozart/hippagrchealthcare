@@ -46,7 +46,7 @@ def recent_runs(count: int = 5) -> list:
 def verify_run_chain() -> dict:
     """Recompute the hash chain of site/run-record.jsonl (each record's prev_hash must equal the previous record's hash)."""
     import hashlib
-    f = ROOT / "site" / "run-record.jsonl"
+    f = ROOT / "site-data" / "run_record.jsonl"
     if not f.exists(): return {"ok": True, "records": 0, "note": "no run records yet"}
     prev = "0" * 64; n = 0
     for line in f.read_text().splitlines():

@@ -42,16 +42,42 @@ if mf.exists():
         except Exception: pass
     problems += scan("notes/metrics.jsonl", read(mf))
 runs = []
-rf = ROOT / "site" / "run-record.jsonl"
+rf = ROOT / "site-data" / "run_record.jsonl"
 if rf.exists():
     for l in read(rf).splitlines():
         try: runs.append(json.loads(l))
         except Exception: pass
-    problems += scan("site/run-record.jsonl", read(rf))
+    problems += scan("site-data/run_record.jsonl", read(rf))
+
+# ---- pipeline datasets (site-data contract: docs/site-data-contract.md) ----
+DATASETS = {
+    "quarantine_by_reason": {"entity": str, "reason": str, "count": int},
+    "denial_by_payer": {"payer": str, "month": str, "lines": int, "denied": int},
+    "encounters_per_day": {"day": str, "type": str, "count": int},
+    "lab_flags": {"test": str, "abnormal": int, "total": int},
+}
+datasets = {}
+for name, shape in DATASETS.items():
+    f = ROOT / "site-data" / (name + ".json")
+    if not f.exists(): continue
+    text = read(f)
+    if len(text) > 1_000_000: problems.append("%s: larger than 1 MB" % f.name); continue
+    problems += scan("site-data/" + f.name, text)
+    try: rows = json.loads(text)
+    except Exception: problems.append("%s: not valid JSON" % f.name); continue
+    for i, row in enumerate(rows):
+        if set(row) != set(shape): problems.append("%s row %d: keys must be %s" % (f.name, i, sorted(shape))); break
+        for k, typ in shape.items():
+            v = row[k]
+            if typ is int:
+                if v is not None and not isinstance(v, int): problems.append("%s row %d: %s must be an integer or null" % (f.name, i, k)); break
+                if isinstance(v, int) and 1 <= v <= 10: problems.append("%s row %d: %s=%d is a small cell (1-10); use null" % (f.name, i, k, v)); break
+            elif not isinstance(v, str) or len(v) > 60: problems.append("%s row %d: %s must be a string of at most 60 chars" % (f.name, i, k)); break
+    datasets[name] = rows
 if problems:
     print("EXPORT REFUSED, fix these first:"); [print(" -", p) for p in problems]; sys.exit(1)
 data = {"updated": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "commits": commits, "recent": recent, "notes": notes, "docs": docs,
-        "metrics": metrics, "runs": runs, "synthetic_only": True}
+        "metrics": metrics, "runs": runs, "datasets": datasets, "synthetic_only": True}
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text("window.SITE_DATA = " + json.dumps(data) + ";\n")
 print("wrote %s: %d commit days, %d notes, %d docs, %d metrics, %d runs" % (OUT, len(commits), len(notes), len(docs), len(metrics), len(runs)))

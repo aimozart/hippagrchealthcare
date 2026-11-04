@@ -30,7 +30,7 @@ footer{background:var(--surface);border-top:1px solid var(--line);padding:28px 2
 <a class="skip" href="#main">Skip to content</a>
 <header><div class="bar">
  <a class="logo" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0b6fa4"/><path d="M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z" fill="#fff"/></svg>HIPPA GRC Healthcare</a>
- <nav aria-label="Main"><a href="#overview">Overview</a><a href="#pipeline">Pipeline</a><a href="#metrics">Progress</a><a href="#runs">Runs</a><a href="#notes">Build log</a><a href="#ask">Ask</a></nav>
+ <nav aria-label="Main"><a href="#overview">Overview</a><a href="#pipeline">Pipeline</a><a href="#metrics">Progress</a><a href="#quality">Quality</a><a href="#business">Measures</a><a href="#runs">Runs</a><a href="#notes">Build log</a><a href="#ask">Ask</a></nav>
 </div></header>
 <main id="main">
 <div class="hero" id="top"><div class="wrap">
@@ -51,6 +51,8 @@ footer{background:var(--surface);border-top:1px solid var(--line);padding:28px 2
  <div class="card"><h3 style="margin-top:0">Work per day (commits)</h3><svg class="chart" id="commits" viewBox="0 0 900 220" role="img" aria-label="Commits per day"></svg></div>
  <div class="card"><h3 style="margin-top:0">Tests passing over time</h3><svg class="chart" id="tests" viewBox="0 0 900 220" role="img" aria-label="Passing tests over time"></svg><div class="sub" id="testsnote"></div></div>
 </div></section>
+<section id="quality"><div class="wrap"><h2>Data quality</h2><p class="lead">What the checks caught, by rule. Records are set aside with the reason, never silently dropped.</p><div class="card" id="qbox"><span class="sub">Appears after the first pipeline run.</span></div></div></section>
+<section id="business"><div class="wrap"><h2>Business measures</h2><p class="lead">Trusted measures from the gold layer (synthetic data).</p><div class="card" id="denbox"><span class="sub">Denial rate by payer appears after the gold layer is built.</span></div><div class="card" id="encbox"><span class="sub">Encounters per day appear after the gold layer is built.</span></div><div class="card" id="labbox"><span class="sub">Lab abnormal rates appear after the gold layer is built.</span></div></div></section>
 <section id="runs"><div class="wrap"><h2>Pipeline runs</h2><p class="lead">Each night's run: records in, checked, and set aside. Records are chained so changes can be detected.</p><div class="card" id="runbox"></div></div></section>
 <section id="notes"><div class="wrap"><h2>Build log</h2><p class="lead">Daily notes on what was done, why, and what went wrong.</p><div id="notelist"></div></div></section>
 <section id="ask"><div class="wrap"><h2>Ask the build log</h2><p class="lead">Search decisions, notes and documents. An AI assistant that answers in plain English comes next.</p>
