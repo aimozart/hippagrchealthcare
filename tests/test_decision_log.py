@@ -1,0 +1,69 @@
+"""Platinum AI decisions are recorded as signed, data-minimal ledger events (entropa-platinum CLI).
+Synthetic data only. Skipped when the entropa-platinum binary is not installed."""
+import shutil
+import subprocess
+import pytest
+from app import decision_log
+from app.sql_guard import check
+
+pytestmark = pytest.mark.skipif(shutil.which("entropa-platinum") is None, reason="entropa-platinum not installed")
+
+SQL = "SELECT payer_id, denial_rate FROM platinum_denials_by_payer LIMIT 10"
+QUESTION = "Which payers deny the most claims?"
+
+
+@pytest.fixture()
+def ledger(tmp_path, monkeypatch):
+    d = tmp_path / "ledger"
+    subprocess.run(["entropa-platinum", "init", str(d)], check=True)
+    monkeypatch.setenv("ENTROPA_PLATINUM_DIR", str(d))
+    return d
+
+
+def verify(d):
+    return subprocess.run(["entropa-platinum", "verify", str(d)], capture_output=True, text=True)
+
+
+def test_an_allowed_query_is_recorded_and_verifies(ledger):
+    v = decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1")
+    assert v.allowed
+    assert "OK records=1" in verify(ledger).stdout
+
+
+def test_a_refused_query_is_recorded_too(ledger):
+    v = decision_log.guarded_query(QUESTION, "DROP TABLE platinum_quality", run_id="run-test-1")
+    assert not v.allowed
+    assert "OK records=1" in verify(ledger).stdout
+
+
+def test_the_verdict_is_the_same_with_or_without_logging(ledger, monkeypatch):
+    with_log = decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1")
+    monkeypatch.delenv("ENTROPA_PLATINUM_DIR")
+    without = decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1")
+    assert with_log == without == check(SQL)
+
+
+def test_no_ledger_configured_means_no_logging_and_no_error(monkeypatch):
+    monkeypatch.delenv("ENTROPA_PLATINUM_DIR", raising=False)
+    assert decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1").allowed
+
+
+def test_a_broken_ledger_never_changes_or_blocks_the_verdict_but_is_reported(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENTROPA_PLATINUM_DIR", str(tmp_path / "missing"))
+    v = decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1")
+    assert v.allowed
+    assert decision_log.last_error() is not None
+
+
+def test_required_mode_fails_closed(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENTROPA_PLATINUM_DIR", str(tmp_path / "missing"))
+    monkeypatch.setenv("ENTROPA_PLATINUM_REQUIRED", "1")
+    v = decision_log.guarded_query(QUESTION, SQL, run_id="run-test-1")
+    assert not v.allowed and "audit" in v.reason
+
+
+def test_identifier_shaped_text_is_never_logged(ledger):
+    q = f"patient {'123'}-{'45'}-{'6789'} denials?"
+    decision_log.guarded_query(q, SQL, run_id="run-test-1")
+    assert "OK records=0" in verify(ledger).stdout
+    assert decision_log.last_error() is not None
