@@ -28,5 +28,17 @@ hits=$(git grep -InE '\b(00[1-9]|0[1-9][0-9]|[1-5][0-9]{2}|6[0-5][0-9]|66[0-5]|6
 if [ "$hits" -eq 0 ]; then d=allow; r=check_passed; else d=deny; r=check_failed; rc=1; fi
 $E emit evidence.control_check identifier_range "$d" "$r" policy_p0_data_safety 1 $((hits == 0 ? 1 : 0)) "$hits" "identifier shapes at $sha" "ids-$sha"
 
+# 4) canary scan: the synthetic canary string must never appear in anything published (site, docs, notes, README)
+chits=$(git grep -Il 'CANARY-7F3A' -- site docs notes README.md 2>/dev/null | wc -l | tr -d ' ')
+if [ "$chits" -eq 0 ]; then d=allow; r=check_passed; else d=deny; r=check_failed; rc=1; fi
+$E emit evidence.control_check canary_scan "$d" "$r" policy_p0_data_safety 1 $((chits == 0 ? 1 : 0)) "$chits" "canary in published files at $sha" "canary-$sha"
+
+# 5) access control for the English-question assistant: the SQL guard refuses everything outside the allow-list
+gout=$(uv run pytest -q tests/test_sql_guard.py 2>&1); g_rc=$?
+gp=$(printf '%s' "$gout" | grep -Eo '[0-9]+ passed' | grep -Eo '[0-9]+' | head -1); gp=${gp:-0}
+gf=$(printf '%s' "$gout" | grep -Eo '[0-9]+ failed' | grep -Eo '[0-9]+' | head -1); gf=${gf:-0}
+if [ "$g_rc" -eq 0 ]; then d=allow; r=check_passed; else d=deny; r=check_failed; rc=1; fi
+$E emit evidence.control_check ci_tests "$d" "$r" hitrust_01_access_control $((gp + gf)) "$gp" "$gf" "sql guard allow-list tests at $sha" "guard-$sha"
+
 echo "checks done (exit $rc)"
 exit "$rc"
