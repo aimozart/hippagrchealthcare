@@ -67,3 +67,32 @@ def test_identifier_shaped_text_is_never_logged(ledger):
     decision_log.guarded_query(q, SQL, run_id="run-test-1")
     assert "OK records=0" in verify(ledger).stdout
     assert decision_log.last_error() is not None
+
+
+def test_an_ml_score_is_recorded_without_the_features(ledger):
+    ok = decision_log.log_score("readmission-risk", features_text="age_band=65-74;los=4", score_text="0.31", run_id="run-test-2")
+    assert ok
+    assert "OK records=1" in verify(ledger).stdout
+    # the raw feature text never reaches the ledger files
+    for f in ledger.rglob("*"):
+        if f.is_file() and f.name != "platinum.key":
+            assert "age_band" not in f.read_text(errors="ignore")
+
+
+def test_a_rag_answer_is_recorded_with_its_precedent_count(ledger):
+    ok = decision_log.log_rag("What drives denials?", "Denials concentrate in two payers.", run_id="run-test-3", cited=2)
+    assert ok
+    assert "OK records=1" in verify(ledger).stdout
+
+
+def test_an_answer_with_no_citations_is_held_not_allowed(ledger):
+    # a RAG answer without any cited source is not 'allow': it is held for review
+    assert decision_log.log_rag("Q?", "A.", run_id="run-test-4", cited=0)
+    assert "OK records=1" in verify(ledger).stdout
+    assert decision_log.last_decision() == ("hold", "needs_review")
+
+
+def test_logging_off_returns_true_for_scores_and_answers(monkeypatch):
+    monkeypatch.delenv("ENTROPA_PLATINUM_DIR", raising=False)
+    assert decision_log.log_score("m", features_text="x", score_text="1", run_id="run-test-5")
+    assert decision_log.log_rag("q", "a", run_id="run-test-5", cited=1)
