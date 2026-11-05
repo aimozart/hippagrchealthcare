@@ -7,6 +7,8 @@ import json
 import os
 import shutil
 import subprocess
+import urllib.error
+import urllib.request
 from .sql_guard import Verdict, check, refuse
 
 _last_error: str | None = None
@@ -25,9 +27,13 @@ def _log(label: str, decision: str, reason: str, text_in: str, text_out: str, ru
     global _last_error, _last_decision
     _last_error = None
     _last_decision = (decision, reason)
+    url = os.environ.get("ENTROPA_PLATINUM_URL")
     d = os.environ.get("ENTROPA_PLATINUM_DIR")
-    if not d:
+    if not url and not d:
         return True
+    if url:
+        return _log_http(url, label, decision, reason, text_in, text_out, run_id, provider, model_id,
+                         in_tokens, out_tokens, cost_micro_usd)
     exe = shutil.which("entropa-platinum")
     if exe is None:
         _last_error = "entropa-platinum is not installed"
@@ -44,6 +50,28 @@ def _log(label: str, decision: str, reason: str, text_in: str, text_out: str, ru
         _last_error = (p.stderr.strip() or "entropa-platinum failed")[:200]
         return False
     return True
+
+def _log_http(url: str, label: str, decision: str, reason: str, text_in: str, text_out: str, run_id: str,
+              provider: str, model_id: str, in_tokens: int, out_tokens: int, cost_micro_usd: int) -> bool:
+    """POST the request to a running ingest (the cloud service or a local one). The caller's identity token,
+    if the service is private, comes from ENTROPA_PLATINUM_TOKEN (never logged)."""
+    global _last_error
+    req = {"label": label, "decision": decision, "reason": reason, "input": text_in, "output": text_out,
+           "run_id": run_id, "provider": provider, "model_id": model_id,
+           "input_tokens": in_tokens, "output_tokens": out_tokens, "cost_micro_usd": cost_micro_usd}
+    headers = {"Content-Type": "application/json"}
+    token = os.environ.get("ENTROPA_PLATINUM_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    r = urllib.request.Request(url.rstrip("/") + "/v1/decision", data=json.dumps(req).encode(), headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(r, timeout=15) as resp:
+            return 200 <= resp.status < 300
+    except urllib.error.HTTPError as e:
+        _last_error = f"ingest refused the request (HTTP {e.code})"
+    except (urllib.error.URLError, OSError, TimeoutError):
+        _last_error = "ingest unreachable"
+    return False
 
 def guarded_query(question: str, sql: str, run_id: str, provider: str = "vertex",
                   model_id: str = "gemini-3.8-flash", in_tokens: int = 0, out_tokens: int = 0,

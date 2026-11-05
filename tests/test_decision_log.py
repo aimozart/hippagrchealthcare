@@ -96,3 +96,43 @@ def test_logging_off_returns_true_for_scores_and_answers(monkeypatch):
     monkeypatch.delenv("ENTROPA_PLATINUM_DIR", raising=False)
     assert decision_log.log_score("m", features_text="x", score_text="1", run_id="run-test-5")
     assert decision_log.log_rag("q", "a", run_id="run-test-5", cited=1)
+
+
+import socket
+import time
+import urllib.request
+
+
+@pytest.fixture()
+def server(tmp_path, monkeypatch):
+    """A real entropa-platinum serve process on a free port (the same service that runs in the cloud)."""
+    d = tmp_path / "node"
+    subprocess.run(["entropa-platinum", "init", str(d)], check=True)
+    s = socket.socket(); s.bind(("127.0.0.1", 0)); port = s.getsockname()[1]; s.close()
+    proc = subprocess.Popen(["entropa-platinum", "serve", str(d)], env={**__import__("os").environ, "PORT": str(port), "BIND": "127.0.0.1"})
+    for _ in range(100):
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/healthz", timeout=1).read(); break
+        except Exception:
+            time.sleep(0.05)
+    monkeypatch.delenv("ENTROPA_PLATINUM_DIR", raising=False)
+    monkeypatch.setenv("ENTROPA_PLATINUM_URL", f"http://127.0.0.1:{port}")
+    yield port
+    proc.kill(); proc.wait()
+
+
+def server_verify(port):
+    return urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/verify", timeout=5).read().decode()
+
+
+def test_http_mode_records_to_the_service(server):
+    assert decision_log.guarded_query(QUESTION, SQL, run_id="run-http-1").allowed
+    assert "OK records=1" in server_verify(server)
+
+
+def test_http_mode_failure_is_reported_and_required_mode_fails_closed(monkeypatch):
+    monkeypatch.setenv("ENTROPA_PLATINUM_URL", "http://127.0.0.1:9")
+    assert decision_log.guarded_query(QUESTION, SQL, run_id="run-http-2").allowed
+    assert decision_log.last_error() is not None
+    monkeypatch.setenv("ENTROPA_PLATINUM_REQUIRED", "1")
+    assert not decision_log.guarded_query(QUESTION, SQL, run_id="run-http-2").allowed
