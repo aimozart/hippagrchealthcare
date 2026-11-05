@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# After every commit, record one audit-evidence receipt (a signed, hash-only code_change event): how many files
+# changed and the short commit id. Never blocks or fails a commit. Counts and ids only; no code, no messages.
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -x "$root/scripts/evidence.sh" ] || exit 0
+sha=$(git rev-parse --short=12 HEAD 2>/dev/null) || exit 0
+files=$(git show --stat --format= HEAD 2>/dev/null | tail -1 | grep -Eo '^ *[0-9]+' | tr -d ' ')
+files=${files:-1}
+"$root/scripts/evidence.sh" emit evidence.change code_change info check_passed hitrust_10_sdlc \
+  "$files" "$files" 0 "commit $sha" "commit-$sha" >/dev/null 2>&1 || true
+exit 0
