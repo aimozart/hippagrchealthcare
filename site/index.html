@@ -30,7 +30,7 @@ footer{background:var(--surface);border-top:1px solid var(--line);padding:28px 2
 <a class="skip" href="#main">Skip to content</a>
 <header><div class="bar">
  <a class="logo" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0b6fa4"/><path d="M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z" fill="#fff"/></svg>HIPPA GRC Healthcare</a>
- <nav aria-label="Main"><a href="#overview">Overview</a><a href="#pipeline">Pipeline</a><a href="#metrics">Progress</a><a href="#quality">Quality</a><a href="#business">Measures</a><a href="#runs">Runs</a><a href="#notes">Build log</a><a href="#ask">Ask</a></nav>
+ <nav aria-label="Main"><a href="#overview">Overview</a><a href="#pipeline">Pipeline</a><a href="#metrics">Progress</a><a href="#quality">Quality</a><a href="#business">Measures</a><a href="#runs">Runs</a><a href="#notes">Build log</a><a href="#entropa">Entropa</a><a href="#ask">Ask</a></nav>
 </div></header>
 <main id="main">
 <div class="hero" id="top"><div class="wrap">
@@ -55,8 +55,28 @@ footer{background:var(--surface);border-top:1px solid var(--line);padding:28px 2
 <section id="business"><div class="wrap"><h2>Business measures</h2><p class="lead">Trusted measures from the gold layer (synthetic data).</p><div class="card" id="denbox"><span class="sub">Denial rate by payer appears after the gold layer is built.</span></div><div class="card" id="encbox"><span class="sub">Encounters per day appear after the gold layer is built.</span></div><div class="card" id="labbox"><span class="sub">Lab abnormal rates appear after the gold layer is built.</span></div></div></section>
 <section id="runs"><div class="wrap"><h2>Pipeline runs</h2><p class="lead">Each night's run: records in, checked, and set aside. Records are chained so changes can be detected.</p><div class="card" id="runbox"></div></div></section>
 <section id="notes"><div class="wrap"><h2>Build log</h2><p class="lead">Daily notes on what was done, why, and what went wrong.</p><div id="notelist"></div></div></section>
+<section id="entropa"><div class="wrap"><h2>Every AI decision and audit receipt, signed by Entropa</h2>
+ <p class="lead">This project records what its AI assistant decides, and the evidence behind its data engineering, in <a href="https://entropa.space" target="_blank" rel="noopener noreferrer">Entropa</a>: a tamper-evident ledger, signed with post-quantum signatures, that anyone can verify. It holds only hashes, closed codes and counts, never patient data. Written in Rust and run serverless.</p>
+ <div class="layers">
+  <div class="layer"><h3>AI decisions</h3>Each question the assistant turns into a database query, and whether the SQL guard allowed it, is a signed record. <a href="https://scryon.entropa.space" target="_blank" rel="noopener noreferrer">Scryon AI Audit Explorer</a></div>
+  <div class="layer"><h3>Audit evidence</h3>Pipeline runs, control checks, access decisions and code changes, filed under the HIPAA or HITRUST control they support, each with a plain-English sentence. <a href="https://scryon-health.entropa.space" target="_blank" rel="noopener noreferrer">Scryon Health Data Explorer</a></div>
+  <div class="layer"><h3>How to do it yourself</h3>Record decisions and evidence from your own pipeline, read the hashes and verify the ledger. <a href="https://docs.entropa.space" target="_blank" rel="noopener noreferrer">Entropa documentation</a></div>
+ </div>
+ <h3 style="margin:26px 0 6px">Why it matters for governance and compliance teams</h3>
+ <p class="lead" style="margin-bottom:14px">Every AI-governance framework converges on one requirement: prove what the AI did, when, and that the record was not altered afterwards. That is what the ledger gives you.</p>
+ <div class="grid">
+  <div class="tile"><b style="font-size:18px">EU AI Act, Article 12</b><span>Automatic, tamper-resistant logging and traceability for high-risk AI systems.</span></div>
+  <div class="tile"><b style="font-size:18px">NIST AI RMF</b><span>Govern and Manage functions call for documented, verifiable records of AI system behavior.</span></div>
+  <div class="tile"><b style="font-size:18px">ISO/IEC 42001</b><span>AI management systems require maintained, controlled documented information on AI operation.</span></div>
+  <div class="tile"><b style="font-size:18px">IAPP AIGP</b><span>Accountability principle: demonstrate, with evidence, what an AI system did.</span></div>
+  <div class="tile"><b style="font-size:18px">HIPAA Security Rule</b><span>Audit controls and integrity safeguards for systems that touch health information. All data here is synthetic and handled as if it were real.</span></div>
+  <div class="tile"><b style="font-size:18px">HITRUST (shape of e1/i1)</b><span>Controls are mapped to the shape of the HITRUST categories.</span></div>
+ </div>
+ <p style="margin-top:18px"><a class="btn" href="https://scryon-health.entropa.space" target="_blank" rel="noopener noreferrer">Open the Health Data Explorer</a> <a class="btn alt" href="https://entropa.space" target="_blank" rel="noopener noreferrer">About Entropa</a> <a class="btn alt" href="https://docs.entropa.space" target="_blank" rel="noopener noreferrer">Docs</a></p>
+ <p class="sub">Aligned with and mapped to these frameworks. Not independently assessed or certified. Evidence supports an organisation's own program; it is not compliance.</p>
+</div></section>
 <section id="ask"><div class="wrap"><h2>Ask the build log</h2><p class="lead">Search decisions, notes and documents. An AI assistant that answers in plain English comes next.</p>
  <input type="search" id="q" placeholder="Try: quarantine, masking, idempotent" aria-label="Search the build log"><div id="hits" aria-live="polite"></div></div></section>
 </main>
-<footer><div class="wrap">This is a demonstration project built on synthetic data. It is not medical advice and contains no real patient information. Controls are aligned with and mapped to HIPAA safeguards; no certification or compliance is claimed. Source code and history: <a href="https://github.com/aimozart/hippagrchealthcare">github.com/aimozart/hippagrchealthcare</a>.</div></footer>
+<footer><div class="wrap">This is a demonstration project built on synthetic data. It is not medical advice and contains no real patient information. Controls are aligned with and mapped to HIPAA safeguards; no certification or compliance is claimed. Recorded and verifiable with <a href="https://entropa.space" target="_blank" rel="noopener noreferrer">Entropa</a>. Source code and history: <a href="https://github.com/aimozart/hippagrchealthcare">github.com/aimozart/hippagrchealthcare</a>.</div></footer>
 <script src="data.js"></script><script src="app.js"></script></body></html>
