@@ -26,6 +26,29 @@ jobs:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ vars.GCP_PUBLISHER_SA }}
           token_format: access_token
+      - name: Identity token for the evidence node (only when configured)
+        id: evidence_auth
+        if: ${{ vars.EVIDENCE_URL != '' }}
+        continue-on-error: true
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_PUBLISHER_SA }}
+          token_format: id_token
+          id_token_audience: ${{ vars.EVIDENCE_URL }}
+          id_token_include_email: true
+      - name: Record audit evidence for the export checks (counts only)
+        if: ${{ vars.EVIDENCE_URL != '' && steps.evidence_auth.outputs.id_token != '' }}
+        continue-on-error: true
+        env:
+          EVIDENCE_URL: ${{ vars.EVIDENCE_URL }}
+          ID_TOKEN: ${{ steps.evidence_auth.outputs.id_token }}
+        run: |
+          sha=$(git rev-parse --short=12 HEAD)
+          # the export step above refuses on secrets, identifier shapes, canary strings and small cells, so reaching here means all passed
+          scripts/ci-evidence.sh evidence.control_check identifier_range allow check_passed policy_p0_data_safety 1 1 0 "export checks at $sha" "ci-ids-$sha"
+          scripts/ci-evidence.sh evidence.control_check canary_scan allow check_passed policy_p0_data_safety 1 1 0 "export checks at $sha" "ci-canary-$sha"
+          scripts/ci-evidence.sh evidence.control_check secret_scan allow check_passed hitrust_10_sdlc 1 1 0 "export checks at $sha" "ci-secrets-$sha"
       - name: Release to the staging channel
         env:
           GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
@@ -36,3 +59,14 @@ jobs:
           GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           GO_LIVE: "yes"
         run: python3 tools/firebase_preview.py --channel live --live
+      - name: Record the deploy as audit evidence
+        if: ${{ always() && vars.EVIDENCE_URL != '' && steps.evidence_auth.outputs.id_token != '' }}
+        continue-on-error: true
+        env:
+          EVIDENCE_URL: ${{ vars.EVIDENCE_URL }}
+          ID_TOKEN: ${{ steps.evidence_auth.outputs.id_token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          sha=$(git rev-parse --short=12 HEAD)
+          if [ "$JOB_STATUS" = "success" ]; then d=info; r=check_passed; p=1; f=0; else d=deny; r=check_failed; p=0; f=1; fi
+          scripts/ci-evidence.sh evidence.change deploy "$d" "$r" hitrust_10_sdlc 1 "$p" "$f" "site publish at $sha" "ci-deploy-$sha"
